@@ -7,26 +7,46 @@ export async function execute(interaction) {
   const text =
 `📘 **Como usar o BestFeeder (LoL Stats Zueiras)**
 
-1) **Configurar a Riot Key (apenas admin)**
+━━━━━━━━━━━━━━━━━━━━━━
+🔐 1) Configurar a Riot Key (apenas admin)
 • \`/key set SUA_RIOT_KEY\`
 • \`/key test\`
 
-2) **Linkar sua conta Riot**
-• \`/link Nome#TAG\`
-Ex: \`/link Ganest11#GPS\`
+━━━━━━━━━━━━━━━━━━━━━━
+👤 2) Vincular contas Riot
 
-✅ Ao linkar, o bot já puxa automaticamente **as últimas 20 partidas**.
+🔹 Vincular SEU Discord:
+• \`/link me Nome#TAG\`
+Ex: \`/link me Ganest11#GPS\`
 
-3) **Atualizar novamente quando quiser**
-• \`/update\` (puxa 20)
-• \`/update 50\` (puxa até 50)
+🔹 Pré-cadastrar alguém (admin):
+• \`/link add Nome#TAG\`
 
-4) **Rankings zueiros**
+✅ Ao vincular, o bot já puxa automaticamente **as últimas 20 partidas**.
+Se as partidas já estiverem no banco, ele não baixa novamente.
+
+━━━━━━━━━━━━━━━━━━━━━━
+🔄 3) Atualizar partidas manualmente
+• \`/update\` → puxa 20 partidas
+• \`/update 50\` → puxa até 50 partidas
+
+(O bot só baixa partidas novas que ainda não existem no banco.)
+
+━━━━━━━━━━━━━━━━━━━━━━
+🏆 4) Rankings zueiros
 • \`/rank deaths\` → 💀 Top Cemitério
 • \`/rank kills\` → 🔪 Top Açougue
 • \`/rank assists\` → 🛟 Top Carregado
 
-Dica: se alguém não aparece no ranking, é porque ainda não linkou (\`/link\`) ou não atualizou (\`/update\`).`;
+ℹ️ O ranking mostra todos os jogadores cadastrados.
+Se alguém aparecer como *(não claimado)*, significa que ainda não rodou \`/link me\`.
+
+━━━━━━━━━━━━━━━━━━━━━━
+🔥 Fluxo recomendado:
+1. Admin roda \`/link add\` para todo mundo.
+2. Cada pessoa roda \`/link me\`.
+3. Atualizem quando quiserem zoar alguém.
+`;
 
   await interaction.reply({ content: text, ephemeral: true });
 }

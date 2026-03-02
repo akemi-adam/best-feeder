@@ -12,7 +12,7 @@ export const data = {
 export async function execute(interaction) {
   const count = interaction.options.getInteger("count") ?? 20;
 
-  const player = db.prepare("SELECT puuid FROM players WHERE discord_id = ?").get(interaction.user.id);
+  const player = db.prepare("SELECT puuid FROM user_links WHERE discord_id = ?").get(interaction.user.id);
   if (!player) return interaction.reply({ content: "Você não está linkado. Use `/link Nome#TAG`.", ephemeral: true });
 
   await interaction.reply(`Atualizando últimas **${count}** partidas...`);

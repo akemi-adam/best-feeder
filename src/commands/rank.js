@@ -32,9 +32,13 @@ export async function execute(interaction) {
     "💀 Top Cemitério";
 
   const rows = db.prepare(`
-    SELECT p.discord_id, p.riot_game_name, p.riot_tag_line, a.games, a.total_kills, a.total_deaths, a.total_assists
-    FROM players p
-    JOIN aggregates a ON a.puuid = p.puuid
+    SELECT
+      ra.riot_game_name, ra.riot_tag_line,
+      a.games, a.total_kills, a.total_deaths, a.total_assists,
+      ul.discord_id AS claimed_discord_id
+    FROM riot_accounts ra
+    JOIN aggregates a ON a.puuid = ra.puuid
+    LEFT JOIN user_links ul ON ul.puuid = ra.puuid
     ORDER BY ${col} DESC
     LIMIT 10
   `).all();
@@ -43,7 +47,8 @@ export async function execute(interaction) {
 
   const lines = rows.map((r, i) => {
     const val = type === "kills" ? r.total_kills : type === "assists" ? r.total_assists : r.total_deaths;
-    return `${i + 1}. **${r.riot_game_name}#${r.riot_tag_line}** — ${val} (em ${r.games} jogos)`;
+    const badge = r.claimed_discord_id ? "" : " *🔺*";
+    return `${i + 1}. **${r.riot_game_name}#${r.riot_tag_line}** — ${val} (em ${r.games} jogos)${badge}`;
   });
 
   return interaction.reply([title, ...lines].join("\n"));

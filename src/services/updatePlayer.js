@@ -1,6 +1,5 @@
 import { db } from "../db/db.js";
 import { getMatchIdsByPuuid, getMatchById } from "../riot/client.js";
-import { extractParticipant } from "../riot/parse.js";
 
 export async function updateRecentMatchesForPuuid(puuid, count = 20) {
   const safeCount = Math.min(Math.max(count, 1), 50);
@@ -8,7 +7,6 @@ export async function updateRecentMatchesForPuuid(puuid, count = 20) {
   const matchIds = await getMatchIdsByPuuid(puuid, safeCount, 0);
 
   const hasMatchStmt = db.prepare("SELECT 1 FROM matches WHERE match_id = ?");
-  const hasStatsStmt = db.prepare("SELECT 1 FROM player_match_stats WHERE match_id = ? AND puuid = ?");
 
   const insertMatch = db.prepare(`
     INSERT INTO matches(match_id, game_start_ts, queue_id, created_at)
@@ -22,48 +20,47 @@ export async function updateRecentMatchesForPuuid(puuid, count = 20) {
     ON CONFLICT(match_id, puuid) DO NOTHING
   `);
 
-  let fetched = 0;
-  let skipped = 0;
+  let fetchedMatches = 0;
+  let skippedMatches = 0;
 
   for (const matchId of matchIds) {
-    // ✅ BUGFIX: não pular só porque o match existe.
-    // Pula apenas se as stats DESSE PUUID nesse match já existirem.
-    const alreadyHasStats = hasStatsStmt.get(matchId, puuid);
-    if (alreadyHasStats) { skipped++; continue; }
-
-    // se match não existe, baixa e salva; se existe, só precisamos das stats
-    const matchExists = hasMatchStmt.get(matchId);
-
-    let dto = null;
-    if (!matchExists) {
-      dto = await getMatchById(matchId);
-      const info = dto?.info;
-
-      insertMatch.run(matchId, info?.gameStartTimestamp ?? null, info?.queueId ?? null, Date.now());
-    } else {
-      // match existe, mas a gente ainda precisa do dto pra extrair participant do puuid
-      dto = await getMatchById(matchId);
+    const exists = hasMatchStmt.get(matchId);
+    if (exists) {
+      skippedMatches++;
+      continue; // ✅ não baixa duas vezes
     }
 
-    const part = extractParticipant(dto, puuid);
-    if (part) {
+    const dto = await getMatchById(matchId);
+    const info = dto?.info;
+
+    insertMatch.run(
+      matchId,
+      info?.gameStartTimestamp ?? null,
+      info?.queueId ?? null,
+      Date.now()
+    );
+
+    const participants = info?.participants ?? [];
+
+    // ✅ salva os 10 participantes (e pronto: ninguém nunca mais precisa baixar esse match)
+    for (const p of participants) {
       insertStats.run(
         matchId,
-        puuid,
-        part.championName ?? null,
-        part.kills ?? 0,
-        part.deaths ?? 0,
-        part.assists ?? 0,
-        part.win ? 1 : 0,
-        part.role ?? null,
-        part.lane ?? null
+        p.puuid,
+        p.championName ?? null,
+        p.kills ?? 0,
+        p.deaths ?? 0,
+        p.assists ?? 0,
+        p.win ? 1 : 0,
+        p.role ?? null,
+        p.lane ?? null
       );
     }
 
-    fetched++;
+    fetchedMatches++;
   }
 
-  // Recalcular aggregates (seguro)
+  // ✅ Recalcula só o agregado do player que pediu update (simples e consistente)
   const agg = db.prepare(`
     SELECT
       COUNT(*) as games,
@@ -83,7 +80,14 @@ export async function updateRecentMatchesForPuuid(puuid, count = 20) {
       total_deaths=excluded.total_deaths,
       total_assists=excluded.total_assists,
       last_updated=excluded.last_updated
-  `).run(puuid, agg.games, agg.total_kills, agg.total_deaths, agg.total_assists, Date.now());
+  `).run(
+    puuid,
+    agg.games,
+    agg.total_kills,
+    agg.total_deaths,
+    agg.total_assists,
+    Date.now()
+  );
 
-  return { fetched, skipped, total: safeCount };
+  return { fetched: fetchedMatches, skipped: skippedMatches, total: safeCount };
 }
