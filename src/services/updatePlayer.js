@@ -63,12 +63,14 @@ export async function updateRecentMatchesForPuuid(puuid, count = 20) {
   // ✅ Recalcula só o agregado do player que pediu update (simples e consistente)
   const agg = db.prepare(`
     SELECT
-      COUNT(*) as games,
-      COALESCE(SUM(kills),0) as total_kills,
-      COALESCE(SUM(deaths),0) as total_deaths,
-      COALESCE(SUM(assists),0) as total_assists
-    FROM player_match_stats
-    WHERE puuid = ?
+      COUNT(pms.match_id) as games,
+      COALESCE(SUM(pms.kills),0) as total_kills,
+      COALESCE(SUM(pms.deaths),0) as total_deaths,
+      COALESCE(SUM(pms.assists),0) as total_assists
+    FROM player_match_stats pms
+    JOIN matches m ON m.match_id = pms.match_id
+    WHERE pms.puuid = ?
+    AND m.queue_id NOT IN (870, 880, 890)
   `).get(puuid);
 
   db.prepare(`
