@@ -6,8 +6,9 @@ import * as key from "./commands/key.js";
 import * as link from "./commands/link.js";
 import * as update from "./commands/update.js";
 import * as rank from "./commands/rank.js";
+import * as help from "./commands/help.js";
 
-const commands = [ping, key, link, update, rank].map(c => c.data);
+const commands = [ping, help, key, link, update, rank].map(c => c.data);
 
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
 

@@ -1,6 +1,7 @@
 import { db } from "../db/db.js";
 import { parseRiotId } from "../riot/parse.js";
 import { getAccountByRiotId } from "../riot/client.js";
+import { updateRecentMatchesForPuuid } from "../services/updatePlayer.js";
 
 export const data = {
   name: "link",
@@ -15,6 +16,8 @@ export async function execute(interaction) {
   const parsed = parseRiotId(riotid);
   if (!parsed) return interaction.reply({ content: "Formato inválido. Ex: `Ganest11#GPS`", ephemeral: true });
 
+  await interaction.reply(`Vinculando **${parsed.gameName}#${parsed.tagLine}** e puxando as últimas **20** partidas...`);
+
   try {
     const acc = await getAccountByRiotId(parsed.gameName, parsed.tagLine);
     const now = Date.now();
@@ -28,18 +31,17 @@ export async function execute(interaction) {
         puuid=excluded.puuid
     `).run(interaction.user.id, parsed.gameName, parsed.tagLine, acc.puuid, now);
 
-    // cria aggregates se não existir
-    db.prepare(`
-      INSERT INTO aggregates(puuid, games, total_kills, total_deaths, total_assists, last_updated)
-      VALUES(?, 0, 0, 0, 0, ?)
-      ON CONFLICT(puuid) DO NOTHING
-    `).run(acc.puuid, now);
+    // atualiza automaticamente 20
+    const result = await updateRecentMatchesForPuuid(acc.puuid, 20);
 
-    return interaction.reply(`Vinculado ✅ **${parsed.gameName}#${parsed.tagLine}**`);
+    return interaction.editReply(
+      `✅ Vinculado: **${parsed.gameName}#${parsed.tagLine}**\n` +
+      `📦 Update automático: baixei **${result.fetched}**, pulei **${result.skipped}** (de ${result.total}).`
+    );
   } catch (e) {
     if (String(e.message).includes("RIOT_API_KEY_NOT_SET")) {
-      return interaction.reply({ content: "Falta setar a key. Use `/key set`.", ephemeral: true });
+      return interaction.editReply("Falta setar a key. Use `/key set`.");
     }
-    return interaction.reply({ content: `Erro ao vincular: ${e.message}`, ephemeral: true });
+    return interaction.editReply(`Erro ao vincular: ${e.message}`);
   }
 }

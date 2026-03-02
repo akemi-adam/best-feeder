@@ -7,6 +7,7 @@ import * as key from "./commands/key.js";
 import * as link from "./commands/link.js";
 import * as update from "./commands/update.js";
 import * as rank from "./commands/rank.js";
+import * as help from "./commands/help.js";
 
 initDb();
 
@@ -15,7 +16,7 @@ const client = new Client({
 });
 
 client.commands = new Collection();
-for (const cmd of [ping, key, link, update, rank]) {
+for (const cmd of [ping, help, key, link, update, rank]) {
   client.commands.set(cmd.data.name, cmd);
 }
 

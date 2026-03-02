@@ -26,8 +26,22 @@ const ADMIN_IDS = new Set([
   // "123456789012345678"
 ]);
 
+function normalizeApiKey(input) {
+  // remove espaços nas pontas + quebra de linha + tabs
+  let k = String(input ?? "")
+    .trim()
+    .replace(/[\r\n\t]/g, "");
+
+  // remove aspas caso usuário cole "RGAPI-...."
+  k = k.replace(/^"+|"+$/g, "").replace(/^'+|'+$/g, "");
+
+  // remove qualquer espaço restante (inclusive no meio)
+  k = k.replace(/\s+/g, "");
+
+  return k;
+}
+
 async function testKey(apiKey) {
-  // endpoint simples: status do LoL (plataforma BR1)
   const url = "https://br1.api.riotgames.com/lol/status/v4/platform-data";
   const res = await request(url, {
     method: "GET",
@@ -43,9 +57,30 @@ export async function execute(interaction) {
     if (ADMIN_IDS.size > 0 && !ADMIN_IDS.has(interaction.user.id)) {
       return interaction.reply({ content: "Sem permissão pra setar a key 😅", ephemeral: true });
     }
-    const value = interaction.options.getString("value", true).trim();
+
+    const raw = interaction.options.getString("value", true);
+    const value = normalizeApiKey(raw);
+
+    // validação bem simples: a key da Riot dev normalmente começa com RGAPI-
+    if (!value.startsWith("RGAPI-") || value.length < 20) {
+      return interaction.reply({
+        content: "Essa key parece inválida (formato inesperado). Cole novamente a Riot API Key (RGAPI-...).",
+        ephemeral: true
+      });
+    }
+
     setConfig("RIOT_API_KEY", value);
-    return interaction.reply({ content: "Key salva ✅", ephemeral: true });
+
+    // opcional: já testa e devolve feedback imediato
+    try {
+      const status = await testKey(value);
+      if (status === 200) {
+        return interaction.reply({ content: "Key salva ✅ e testada ✅ (HTTP 200)", ephemeral: true });
+      }
+      return interaction.reply({ content: `Key salva ✅ mas o teste respondeu HTTP ${status}`, ephemeral: true });
+    } catch (e) {
+      return interaction.reply({ content: `Key salva ✅ mas o teste falhou: ${e.message}`, ephemeral: true });
+    }
   }
 
   if (sub === "test") {
@@ -55,7 +90,7 @@ export async function execute(interaction) {
     try {
       const status = await testKey(key);
       if (status === 200) return interaction.reply("Key OK ✅ (BR1 status 200)");
-      return interaction.reply(`Key respondeu com HTTP ${status} (ainda pode ser rate/perm)`);
+      return interaction.reply(`Key respondeu com HTTP ${status} (pode ser rate limit/permissão)`);
     } catch (e) {
       return interaction.reply({ content: `Falha ao testar key: ${e.message}`, ephemeral: true });
     }
