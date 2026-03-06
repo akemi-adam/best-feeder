@@ -9,6 +9,8 @@ import * as update from "./commands/update.js";
 import * as rank from "./commands/rank.js";
 import * as help from "./commands/help.js";
 import * as participation from "./commands/participation.js";
+import * as winrate from "./commands/winrate.js";
+import * as build from "./commands/build.js";
 
 initDb();
 
@@ -17,7 +19,7 @@ const client = new Client({
 });
 
 client.commands = new Collection();
-for (const cmd of [ping, help, key, link, update, rank, participation]) {
+for (const cmd of [ping, help, key, link, update, rank, participation, winrate, build]) {
   client.commands.set(cmd.data.name, cmd);
 }
 

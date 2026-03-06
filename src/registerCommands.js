@@ -8,8 +8,10 @@ import * as update from "./commands/update.js";
 import * as rank from "./commands/rank.js";
 import * as help from "./commands/help.js";
 import * as participation from "./commands/participation.js";
+import * as winrate from "./commands/winrate.js";
+import * as build from "./commands/build.js";
 
-const commands = [ping, help, key, link, update, rank, participation].map(c => c.data);
+const commands = [ping, help, key, link, update, rank, participation, winrate, build].map(c => c.data);
 
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
 
