@@ -4,49 +4,62 @@ export const data = {
 };
 
 export async function execute(interaction) {
-  const text =
-`📘 **Como usar o BestFeeder (LoL Stats Zueiras)**
+const text =
+`📘 **Como usar o BestFeeder**
 
-━━━━━━━━━━━━━━━━━━━━━━
-🔐 1) Configurar a Riot Key (apenas admin)
+🔐 **1) Riot Key (admin)**
 • \`/key set SUA_RIOT_KEY\`
 • \`/key test\`
 
-━━━━━━━━━━━━━━━━━━━━━━
-👤 2) Vincular contas Riot
-
-🔹 Vincular SEU Discord:
+👤 **2) Vincular contas**
 • \`/link me Nome#TAG\`
 Ex: \`/link me Ganest11#GPS\`
 
-🔹 Pré-cadastrar alguém (admin):
-• \`/link add Nome#TAG\`
+• \`/link add Nome#TAG\` *(admin)*
 
-✅ Ao vincular, o bot já puxa automaticamente **as últimas 20 partidas**.
-Se as partidas já estiverem no banco, ele não baixa novamente.
+✅ Ao linkar, o bot já puxa automaticamente as últimas 20 partidas.
 
-━━━━━━━━━━━━━━━━━━━━━━
-🔄 3) Atualizar partidas manualmente
-• \`/update\` → puxa 20 partidas
-• \`/update 50\` → puxa até 50 partidas
+🔄 **3) Atualizar partidas**
+• \`/update me\`
+• \`/update me count:50\`
 
-(O bot só baixa partidas novas que ainda não existem no banco.)
+🌍 Global *(admin)*
+• \`/update global\`
+• \`/update global count:50\`
 
-━━━━━━━━━━━━━━━━━━━━━━
-🏆 4) Rankings zueiros
-• \`/rank deaths\` → 💀 Top Cemitério
-• \`/rank kills\` → 🔪 Top Açougue
-• \`/rank assists\` → 🛟 Top Carregado
+🏆 **4) Ranks**
+• \`/rank kills\`
+• \`/rank deaths\`
+• \`/rank assists\`
 
-ℹ️ O ranking mostra todos os jogadores cadastrados.
-Se alguém aparecer como *(não claimado)*, significa que ainda não rodou \`/link me\`.
+📅 Filtros:
+• \`/rank kills month:march\`
+• \`/rank kills period:last30days\`
+• \`/rank kills period:today\`
 
-━━━━━━━━━━━━━━━━━━━━━━
-🔥 Fluxo recomendado:
-1. Admin roda \`/link add\` para todo mundo.
-2. Cada pessoa roda \`/link me\`.
-3. Atualizem quando quiserem zoar alguém.
-`;
+🥇 **5) Top champs**
+• \`/rank top my_champions\`
+• \`/rank top champs\`
+
+📊 **6) Participation**
+• \`/participation most\`
+• \`/participation least\`
+
+📈 **7) Winrate**
+• \`/winrate me\`
+• \`/winrate global\`
+• \`/winrate global mode:flex\`
+• \`/winrate global month:april\`
+• \`/winrate lane name:top\`
+
+🧠 **8) Build**
+• \`/build champ:fiddlesticks lane:top\`
+• \`/build champ:sona lane:jungle\`
+
+💡 **Dicas**
+• 🔺 = não claimado
+• Bots não entram nos ranks
+• Alguns modos novos podem não aparecer na Riot API`;
 
   await interaction.reply({ content: text, ephemeral: true });
 }
